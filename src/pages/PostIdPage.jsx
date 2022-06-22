@@ -19,9 +19,9 @@ export default function PostIdPage() {
     }
 
     useEffect(() => {
-        fetchPostById(params.id)
-        fetchCommentsByPostId(params.id)
-    })
+        fetchPostById()
+        fetchCommentsByPostId()
+    }, [])
 
 
     return (
@@ -30,7 +30,12 @@ export default function PostIdPage() {
         <p>{post.body}</p>
         <h3>Комментарии:</h3>
         <div>
-            {comments.map()}
+            {comments.map(comm => 
+                <div style={{marginTop: '20px'}}>
+                    <h5>{comm.email}</h5>
+                    <p>{comm.body}</p>
+                </div>    
+            )}
         </div>
     </div>
     )
