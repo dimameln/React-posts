@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import MyButton from '../components/UI/button/MyButton';
 import MyModal from '../components/UI/MyModal/MyModal';
 import PostFIlter from '../components/PostFIlter';
-import Pagination from '../components/UI/pagination/Pagination';
 import {usePosts} from '../hooks/usePosts';
 import PostService from '../API/PostService';
 import PostForm from '../components/PostForm';
@@ -10,6 +9,7 @@ import PostList from '../components/PostList';
 import MyLoader from '../components/UI/Loader/MyLoader';
 import { getPageCount } from '../utils/pages';
 import { useRef } from 'react';
+import { useObserver } from '../hooks/useObserver';
 
 function Posts() {
     const [posts, setPosts] = useState([
@@ -26,7 +26,6 @@ function Posts() {
     const [page, setPage] = useState(1)
     const [isLoading, setIsLoading] = useState(false)
     const lastElement = useRef()
-    const observer = useRef()
 
     async function fetchPosts() {
         setIsLoading(true)
@@ -41,17 +40,9 @@ function Posts() {
         fetchPosts()
     }, [page])
 
-    useEffect(() => {
-        if (isLoading) return;
-        if (observer.current) observer.current.disconnect();
-        let callback = function (entries, observer) {
-            if (entries[0].isIntersecting && page < totalPages) {
-                setPage(page + 1)
-            }
-        }
-        observer.current = new IntersectionObserver(callback)
-        observer.current.observe(lastElement.current)
-    }, [isLoading])
+    useObserver(lastElement, page < totalPages, isLoading, () => {
+        setPage(page + 1)
+    })
 
 
     const createPost = (newPost) => {
@@ -61,10 +52,6 @@ function Posts() {
 
     const removePost = (post) => {
         setPosts(posts.filter(p => p.id !== post.id))
-    }
-
-    const changePage = (page) => {
-        setPage(page)
     }
 
     return (
@@ -83,11 +70,6 @@ function Posts() {
             {isLoading &&
                 <div style={{display: 'flex', justifyContent: 'center', marginTop: '50px'}}><MyLoader/></div>
             }
-            <Pagination
-                page={page}
-                changePage={changePage}
-                totalPages={totalPages}
-            />
         </div>
     );
 }
