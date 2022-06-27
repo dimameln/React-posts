@@ -9,6 +9,7 @@ import PostForm from '../components/PostForm';
 import PostList from '../components/PostList';
 import MyLoader from '../components/UI/Loader/MyLoader';
 import { getPageCount } from '../utils/pages';
+import { useRef } from 'react';
 
 function Posts() {
     const [posts, setPosts] = useState([
@@ -24,19 +25,34 @@ function Posts() {
     const [limit, setLimit] = useState(10)
     const [page, setPage] = useState(1)
     const [isLoading, setIsLoading] = useState(false)
+    const lastElement = useRef()
+    const observer = useRef()
 
     async function fetchPosts() {
         setIsLoading(true)
         const response = await PostService.getAll(limit, page)
-        setPosts(response.data)
-        setIsLoading(false)
+        setPosts([...posts, ...response.data])
         const totalCount = response.headers['x-total-count']
         setTotalPages(getPageCount(totalCount, limit))
+        setIsLoading(false)
     }
 
     useEffect(() => {
         fetchPosts()
     }, [page])
+
+    useEffect(() => {
+        if (isLoading) return;
+        if (observer.current) observer.current.disconnect();
+        let callback = function (entries, observer) {
+            if (entries[0].isIntersecting && page < totalPages) {
+                setPage(page + 1)
+            }
+        }
+        observer.current = new IntersectionObserver(callback)
+        observer.current.observe(lastElement.current)
+    }, [isLoading])
+
 
     const createPost = (newPost) => {
         setPosts([...posts, newPost])
@@ -62,9 +78,10 @@ function Posts() {
             </MyModal>
             <hr style={{margin: '15px 0'}}/>
             <PostFIlter filter={filter} setFilter={setFilter}/>
-            {isLoading
-                ? <div style={{display: 'flex', justifyContent: 'center', marginTop: '50px'}}><MyLoader/></div>
-                : <PostList remove={removePost} posts={sortedAndSearchedPosts} title='Посты про JS'/>
+            <PostList remove={removePost} posts={sortedAndSearchedPosts} title='Посты про JS'/>
+            <div ref={lastElement} style={{height: '20px'}}/>
+            {isLoading &&
+                <div style={{display: 'flex', justifyContent: 'center', marginTop: '50px'}}><MyLoader/></div>
             }
             <Pagination
                 page={page}

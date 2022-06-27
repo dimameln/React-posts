@@ -4,9 +4,15 @@ import { Route } from 'react-router-dom';
 import Posts from '../pages/Posts';
 import { privateRoutes, publicRoutes } from '../router/routes';
 import Login from '../pages/Login';
+import { useContext } from 'react';
+import { AuthContext } from '../context/index';
+import MyLoader from './UI/Loader/MyLoader';
 
 export default function AppRouter() {
-  const isAuth = true
+  const {isAuth, isLoading} = useContext(AuthContext)
+
+  if (isLoading) return <MyLoader/>
+  
   return (
     isAuth 
     ? 
@@ -16,6 +22,7 @@ export default function AppRouter() {
           element={route.component} 
           path={route.path} 
           exact={route.exact}
+          key={route.path}
         />  
       )}
       <Route path='*' element={<Posts/>}/>
@@ -27,6 +34,7 @@ export default function AppRouter() {
           element={route.component} 
           path={route.path} 
           exact={route.exact}
+          key={route.path}
         />  
       )}
       <Route path='*' element={<Login/>}/>
